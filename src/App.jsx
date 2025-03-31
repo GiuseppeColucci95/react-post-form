@@ -11,6 +11,48 @@ function App() {
     body: '',
     check: false
   });
+  const [error, setError] = useState({
+    author: '',
+    title: '',
+    body: '',
+    check: ''
+  });
+  const [formSent, setFormSent] = useState(false);
+
+  function formValidate() {
+    const newError = {
+      author: '',
+      title: '',
+      body: '',
+      check: ''
+    }
+
+    setFormSent(false);
+    let errorsCounter = 0;
+
+    if (formData.author.trim().length < 2) {
+      newError.author = "Please insert an author with minimum 2 characters";
+      errorsCounter++;
+    }
+    if (formData.title.trim().length < 5) {
+      newError.title = "Please insert a title with minimum 5 characters";
+      errorsCounter++;
+    }
+    if (formData.body.trim().length < 20) {
+      newError.body = "Please insert a body with minimum 20 characters";
+      errorsCounter++;
+    }
+
+    console.log(newError);
+
+    setError(newError);
+    if (errorsCounter > 0) {
+      return false;
+    }
+    setFormSent(true);
+    setTimeout(() => setFormSent(false), 3000);
+    return true;
+  }
 
   function handleFormDataChange(e) {
 
@@ -26,8 +68,17 @@ function App() {
 
   function handleSubmit(e) {
 
+    //prevent default refresh browser behavior
     e.preventDefault();
 
+    const isValid = formValidate();
+
+    //if not valid form return
+    if (!isValid) {
+      return;
+    }
+
+    //else fetch ajax call
     fetch(endpoint_url, {
       method: 'POST',
       headers: {
@@ -38,7 +89,18 @@ function App() {
       .then(res => res.json())
       .then(data => {
         console.log(data);
+
+        setFormData({
+          author: '',
+          title: '',
+          body: '',
+          check: false
+        });
       })
+      .catch(err => {
+        console.error(err);
+      });
+
   }
 
   //template
@@ -53,6 +115,10 @@ function App() {
 
       <div className="container py-5">
 
+        <div className={`${formSent === false ? 'd-none' : 'alert alert-success'}`} role="alert">
+          Form sent!
+        </div>
+
         <form onSubmit={handleSubmit}>
 
           <div className="row">
@@ -63,14 +129,18 @@ function App() {
                 <label htmlFor="author" className="form-label">Author</label>
                 <input
                   type="text"
-                  className="form-control"
+                  className={`form-control ${error.author ? 'is-invalid' : ''}`}
                   name="author"
                   id="author"
                   aria-describedby="authorHelper"
                   placeholder="Type your author here..."
                   value={formData.author}
                   onChange={handleFormDataChange} />
-                <small id="authorHelper" className="form-text text-muted">Type your author above</small>
+                {error.author ?
+                  (<div className="invalid-feedback">{error.author}</div>)
+                  :
+                  (<small id="authorHelper" className="form-text text-muted">Type your author above</small>)
+                }
               </div>
 
             </div>
@@ -80,14 +150,18 @@ function App() {
                 <label htmlFor="title" className="form-label">Title</label>
                 <input
                   type="text"
-                  className="form-control"
+                  className={`form-control ${error.title ? 'is-invalid' : ''}`}
                   name="title"
                   id="title"
                   aria-describedby="titleHelper"
                   placeholder="Type your title here..."
                   value={formData.title}
                   onChange={handleFormDataChange} />
-                <small id="titleHelper" className="form-text text-muted">Type your title above</small>
+                {error.title ?
+                  (<div className="invalid-feedback">{error.title}</div>)
+                  :
+                  <small id="titleHelper" className="form-text text-muted">Type your title above</small>
+                }
               </div>
             </div>
 
@@ -95,14 +169,18 @@ function App() {
               <div className="mb-3">
                 <label htmlFor="body" className="form-label">Testo</label>
                 <textarea
-                  className="form-control"
+                  className={`form-control ${error.body ? 'is-invalid' : ''}`}
                   name="body"
                   id="body"
                   rows="5"
                   value={formData.body}
                   onChange={handleFormDataChange}>
                 </textarea>
-                <small id="bodyHelper" className="form-text text-muted">Type your request above</small>
+                {error.body ?
+                  (<div className="invalid-feedback">{error.body}</div>)
+                  :
+                  <small id="bodyHelper" className="form-text text-muted">Type your request above</small>
+                }
               </div>
             </div>
 
